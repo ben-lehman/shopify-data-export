@@ -9,9 +9,9 @@ app.debug = True
 app.secret_key = cfg.SECRET_KEY
 
 
-@app.route('/products', methods=['GET'])
-def products():
-    """ Get a stores products """
+@app.route('/orders', methods=['GET'])
+def orders():
+    """ Get a stores orders """
     headers = {
         "X-Shopify-Access-Token": session.get("access_token"),
         "Content-Type": "application/json"
@@ -22,7 +22,7 @@ def products():
                                                    endpoint), headers=headers)
 
     if response.status_code == 200:
-        print("Going!")
+        print("Writing orders to csv")
         order_str = response.content.decode('utf-8')
         order_parsed = json.loads(order_str)
         ord_data = order_parsed['orders']
@@ -40,6 +40,8 @@ def products():
                 count += 1
             csvwriter.writerow(order.values())
         order_data.close()
+
+        print("Orders written!")
 
         return response.content, response.status_code, response.headers.items()
     else:
@@ -87,7 +89,7 @@ def connect():
             session['shop'] = request.args.get("shop")
 
             return render_template('welcome.html', from_shopify=resp_json,
-                                   products=products())
+                                   orders=orders())
         else:
             print("Failed to get access token: ", resp.status_code, resp.text)
             return render_template('error.html')
