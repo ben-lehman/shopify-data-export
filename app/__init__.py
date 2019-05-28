@@ -20,7 +20,8 @@ def create_app(test_config=None):
     from . import connect
     app.register_blueprint(connect.bp)
 
-    return app
+    from . import export
+    app.register_blueprint(export.bp)
+    app.add_url_rule('/', endpoint='index')
 
-if __name__ == "__main__":
-    app.run(host="localhost", port=8080)
+    return app

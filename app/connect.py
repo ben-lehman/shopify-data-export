@@ -1,5 +1,5 @@
 from flask import (
-    Flask, Blueprint, render_template, request, redirect, Response, session, jsonify
+    Flask, Blueprint, render_template, request, redirect, Response, session, jsonify, url_for
 )
 
 from config import Config as cfg
@@ -49,8 +49,10 @@ def connect():
             session['access_token'] = resp_json.get("access_token")
             session['shop'] = request.args.get("shop")
 
-            return render_template('connection/welcome.html',
-                                   from_shopify=resp_json)
+
+            return redirect(url_for('index'))
+            # return render_template('connection/welcome.html',
+            #                        from_shopify=resp_json)
         else:
             print("Failed to get access token: ", resp.status_code, resp.text)
             return render_template('error.html')
