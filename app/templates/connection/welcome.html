@@ -1,0 +1,9 @@
+{% extends 'base.html' %}
+
+{% block header %}
+  <h1>{% block title %}Welcome!{% endblock %}</h1>
+{% endblock %}
+
+{% block content %}
+  <h2><a href="/orders">Click to export orders to a csv</a></h2>
+{% endblock %}
