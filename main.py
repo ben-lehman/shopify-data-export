@@ -16,15 +16,16 @@ def json_to_csv(json_data, column_name, limit, data_file, header=True):
     # create csv writer object
     csvwriter = csv.writer(data_file)
     count = 0
-    print("limit: ", limit)
     for d in data:
-        print("count: ", count)
-        if count == 0 & header is True:
+        if count == 0 and header is True:
             header = d.keys()
             csvwriter.writerow(header)
             count += 1
-        csvwriter.writerow(d.values())
-        count += 1
+        elif count == 0 and header is False:
+            count += 1
+        else:
+            csvwriter.writerow(d.values())
+            count += 1
         if count == limit:
             min_date = d['created_at']
             return min_date
@@ -59,23 +60,29 @@ def get_all_orders(shop, filename):
     """ Page through all orders to write orders to csv """
     total_order_count = get_response(shop_url, "/admin/api/2019-04/orders/count.json")
     current_order_count = 0
+    # limit of orders can be a range from 1-250.
+    limit = 201
 
-    order_response = get_response(shop, "/admin/api/2019-04/orders.json?limit=250")
+    order_response = get_response(shop, "/admin/api/2019-04/orders.json?limit=%s" % limit)
     data_file = open(filename, 'w')
 
     if order_response.status_code == 200:
-        min_date = json_to_csv(order_response.content, 'orders', 250, data_file)
+        min_date = json_to_csv(order_response.content, 'orders', limit, data_file)
+        current_order_count += limit - 1
         print("MIN_DATE: ", min_date)
-    else: 
+    else:
         print("FAILED")
 
-    endpoint = "/admin/api/2019-04/orders.json?created_at_min=%s&limit=250" % (min_date)
-    order_response = get_response(shop, endpoint)
+    while current_order_count < 5000:
+        endpoint = "/admin/api/2019-04/orders.json?created_at_max=%s&limit=%s" % (min_date, limit)
+        order_response = get_response(shop, endpoint)
 
-    if order_response.status_code == 200:
-        min_date = json_to_csv(order_response.content, 'orders', 250, data_file, header=False)
-    else: 
-        print("FAILED: ", order_respone.status_code)
+        if order_response.status_code == 200:
+            min_date = json_to_csv(order_response.content, 'orders', limit, data_file, header=False)
+            current_order_count += limit - 1
+            print("COUNT: ", current_order_count)
+        else:
+            print("FAILED: ", order_response.status_code)
 
     data_file.close()
 
@@ -92,8 +99,12 @@ def get_all_orders(shop, filename):
     # close datafile
 
 
-
 if __name__ == '__main__':
+
+    API_KEY = cfg.API_KEY
+    API_SECRET = cfg.API_SECRET
+    HOST = cfg.HOST
+
     #Set Shop
     shop_url = "https://%s:%s@%s" % (API_KEY, API_SECRET, HOST)
     shopify.ShopifyResource.set_site(shop_url)
