@@ -88,10 +88,6 @@ def get_all_orders(shop, filename):
     data_file.close()
 
 
-get_all_customers():
-
-
-
 if __name__ == '__main__':
 
     API_KEY = cfg.API_KEY
