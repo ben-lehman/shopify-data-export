@@ -58,7 +58,8 @@ def get_response(shop, endpoint, params=''):
 
 def get_all_orders(shop, filename):
     """ Page through all orders to write orders to csv """
-    total_order_count = get_response(shop_url, "/admin/api/2019-04/orders/count.json")
+    order_count_response = get_response(shop_url, "/admin/api/2019-04/orders/count.json")
+    total_order_count = json.loads(order_count_response.content.decode('utf-8')).get('count')
     current_order_count = 0
     # limit of orders can be a range from 1-250.
     limit = 201
@@ -73,7 +74,7 @@ def get_all_orders(shop, filename):
     else:
         print("FAILED")
 
-    while current_order_count < 5000:
+    while current_order_count < total_order_count:
         endpoint = "/admin/api/2019-04/orders.json?created_at_max=%s&limit=%s" % (min_date, limit)
         order_response = get_response(shop, endpoint)
 
@@ -86,17 +87,9 @@ def get_all_orders(shop, filename):
 
     data_file.close()
 
-    # get order count
-    # set current_order_count = 0
-    # open datafile
-    # get first 250 orders
-    #      - set csv headers
-    #      - write rows to csv
-    #      - return last order's created at date
-    # keep getting 250 orders with new min data param
-    #   - update min date param
-    #   - write rows to csv
-    # close datafile
+
+get_all_customers():
+
 
 
 if __name__ == '__main__':
@@ -105,7 +98,7 @@ if __name__ == '__main__':
     API_SECRET = cfg.API_SECRET
     HOST = cfg.HOST
 
-    #Set Shop
+    # Set Shop
     shop_url = "https://%s:%s@%s" % (API_KEY, API_SECRET, HOST)
     shopify.ShopifyResource.set_site(shop_url)
 
