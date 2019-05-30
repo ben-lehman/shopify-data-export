@@ -56,7 +56,7 @@ def get_response(shop, endpoint, params=''):
     return response
 
 
-def get_all_orders(shop, filename):
+def get_all_orders(shop, filename, fields):
     """ Page through all orders to write orders to csv """
     order_count_response = get_response(shop_url, "/admin/api/2019-04/orders/count.json")
     total_order_count = json.loads(order_count_response.content.decode('utf-8')).get('count')
@@ -64,7 +64,7 @@ def get_all_orders(shop, filename):
     # limit of orders can be a range from 1-250.
     limit = 201
 
-    order_response = get_response(shop, "/admin/api/2019-04/orders.json?limit=%s" % limit)
+    order_response = get_response(shop, "/admin/api/2019-04/orders.json?limit=%s&fields=%s" % (limit, fields))
     data_file = open(filename, 'w')
 
     if order_response.status_code == 200:
@@ -75,7 +75,7 @@ def get_all_orders(shop, filename):
         print("FAILED")
 
     while current_order_count < total_order_count:
-        endpoint = "/admin/api/2019-04/orders.json?created_at_max=%s&limit=%s" % (min_date, limit)
+        endpoint = "/admin/api/2019-04/orders.json?created_at_max=%s&limit=%s&fields=%s" % (min_date, limit, fields)
         order_response = get_response(shop, endpoint)
 
         if order_response.status_code == 200:
@@ -84,6 +84,37 @@ def get_all_orders(shop, filename):
             print("COUNT: ", current_order_count)
         else:
             print("FAILED: ", order_response.status_code)
+
+    data_file.close()
+
+
+def get_all_customers(shop, filename, fields):
+    customer_count_response = get_response(shop, "/admin/api/2019-04/customers/count.json")
+    total_customer_count = json.loads(customer_count_response.content.decode('utf-8')).get('count')
+    current_customer_count = 0
+    # limit of customers can be a range from 1-250.
+    limit = 201
+
+    customer_response = get_response(shop, "/admin/api/2019-04/customers.json?limit=%s&fields=%s" % (limit, fields))
+    data_file = open(filename, 'w')
+
+    if customer_response.status_code == 200:
+        min_date = json_to_csv(customer_response.content, 'customers', limit, data_file)
+        current_customer_count += limit - 1
+        print("MIN_DATE: ", min_date)
+    else:
+        print("FAILED")
+
+    while current_customer_count < total_customer_count:
+        endpoint = "/admin/api/2019-04/customers.json?created_at_max=%s&limit=%s&fields=%s" % (min_date, limit, fields)
+        customer_response = get_response(shop, endpoint)
+
+        if customer_response.status_code == 200:
+            min_date = json_to_csv(customer_response.content, 'customers', limit, data_file, header=False)
+            current_customer_count += limit - 1
+            print("COUNT: ", current_customer_count)
+        else:
+            print("FAILED: ", customer_response.status_code)
 
     data_file.close()
 
@@ -98,4 +129,8 @@ if __name__ == '__main__':
     shop_url = "https://%s:%s@%s" % (API_KEY, API_SECRET, HOST)
     shopify.ShopifyResource.set_site(shop_url)
 
-    get_all_orders(shop_url, 'pursuit_order_500.csv')
+    order_fields = 'id,email,created_at,total_price,buyer_accepts_marketing,location_id'
+    customer_fields = 'id, email, accepts_marketing, created_at, orders_count, total_spent'
+
+    # get_all_orders(shop_url, 'pursuit_orders_small.csv', order_fields)
+    get_all_customers(shop_url, 'pursuit_customers_small.csv', customer_fields)
