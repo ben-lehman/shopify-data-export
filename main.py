@@ -132,5 +132,5 @@ if __name__ == '__main__':
     order_fields = 'id,email,created_at,total_price,buyer_accepts_marketing,location_id'
     customer_fields = 'id, email, accepts_marketing, created_at, orders_count, total_spent'
 
-    # get_all_orders(shop_url, 'pursuit_orders_small.csv', order_fields)
-    get_all_customers(shop_url, 'pursuit_customers_small.csv', customer_fields)
+    # get_all_orders(shop_url, 'export_orders.csv', order_fields)
+    get_all_customers(shop_url, 'export_customers.csv', customer_fields)
